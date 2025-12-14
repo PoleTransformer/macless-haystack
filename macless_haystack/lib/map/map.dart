@@ -6,7 +6,6 @@ import 'package:macless_haystack/accessory/accessory_model.dart';
 import 'package:macless_haystack/accessory/accessory_registry.dart';
 import 'package:macless_haystack/location/location_model.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_map_cancellable_tile_provider/flutter_map_cancellable_tile_provider.dart';
 
 class AccessoryMap extends StatefulWidget {
   final MapController? mapController;
@@ -113,7 +112,7 @@ class _AccessoryMapState extends State<AccessoryMap> {
                     InteractiveFlag.pinchZoom)),
         children: [
           TileLayer(
-            tileProvider: CancellableNetworkTileProvider(),
+            tileProvider: NetworkTileProvider(),
             tileBuilder: (context, child, tile) {
               var isDark = (Theme.of(context).brightness == Brightness.dark);
               return isDark
