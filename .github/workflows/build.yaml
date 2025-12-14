@@ -79,6 +79,7 @@ jobs:
           cache: true
           channel: stable
           flutter-version: 3.38.5 # match with local version, otherwise compileSdk flutter.compileSdkVersion may differ
+      - run: flutter --version
       - name: GH-Page Build
         working-directory: ./macless_haystack
         run: |
