@@ -3,6 +3,14 @@ plugins {
     id "kotlin-android"
     id "dev.flutter.flutter-gradle-plugin"
 }
+
+//println("Flutter compileSdkVersion: ${flutter.compileSdkVersion}")
+//println("Flutter targetSdkVersion: ${flutter.targetSdkVersion}")
+//println("Flutter ndkVersion: ${flutter.ndkVersion}")
+//println("Flutter versionCode: ${flutter.versionCode}")
+//println("Flutter versionName: ${flutter.versionName}")
+
+
 def localProperties = new Properties()
 def localPropertiesFile = rootProject.file('local.properties')
 if (localPropertiesFile.exists()) {
@@ -25,7 +33,6 @@ if (flutterVersionName == null) {
 
 android {
     compileSdk 36
-    ndkVersion flutter.ndkVersion
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
