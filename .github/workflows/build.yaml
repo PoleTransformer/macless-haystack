@@ -78,7 +78,10 @@ jobs:
         with:
           cache: true
           channel: stable
-          flutter-version: 3.38.5 # match with local version, otherwise compileSdk flutter.compileSdkVersion may differ
+          flutter-version: 3.38.5
+      - name: Install Android SDK Platform 36
+        run: |
+          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-36"
 #      - name: GH-Page Build
 #        working-directory: ./macless_haystack
 #        run: |
