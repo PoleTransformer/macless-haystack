@@ -79,9 +79,14 @@ jobs:
           cache: true
           channel: stable
           flutter-version: 3.38.5
-      - name: Install Android SDK Platform 36
-        run: |
-          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-36"
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          api-level: 36
+          build-tools: 36.0.0
+
+      - name: Accept Licenses
+        run: yes | sdkmanager --licenses
 #      - name: GH-Page Build
 #        working-directory: ./macless_haystack
 #        run: |
