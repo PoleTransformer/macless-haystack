@@ -8,7 +8,7 @@ jobs:
     
     steps:
       - name: Prepare and checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
       - name: Set environment variables
         run: echo "VERSION=$(cat version)" >> $GITHUB_ENV     
       - name: Fail if Git-Tag already exist on main
@@ -39,24 +39,24 @@ jobs:
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}  
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build and push docker development image
-        if: github.ref == 'refs/heads/dev'  
-        uses: docker/build-push-action@v5
+        if: github.ref == 'refs/heads/dev'
+        uses: docker/build-push-action@v6
         with:
           context: ./endpoint
           platforms: linux/amd64,linux/arm64
           push: true
           file: ./endpoint/Dockerfile_dev
-          tags: christld/macless-haystack:latest-dev,christld/macless-haystack:v${{ env.VERSION }}-${{ github.sha }},   
+          tags: christld/macless-haystack:latest-dev,christld/macless-haystack:v${{ env.VERSION }}-${{ github.sha }},
       - name: Build and push docker main image
-        if: github.ref == 'refs/heads/main'  
+        if: github.ref == 'refs/heads/main'
         uses: docker/build-push-action@v5
         with:
           context: "{{defaultContext}}:endpoint"
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: christld/macless-haystack:latest,christld/macless-haystack:v${{ env.VERSION }},        
+          tags: christld/macless-haystack:latest,christld/macless-haystack:v${{ env.VERSION }},
       - name: Install ARM Toolchain
         uses: carlosperate/arm-none-eabi-gcc-action@v1
         with:
@@ -69,21 +69,35 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '17'
-      - name: Cache Flutter dependencies
-        uses: actions/cache@v3
-        with:
-          path: /opt/hostedtoolcache/flutter
-          key: ${{ runner.OS }}-flutter-install-cache
       - uses: subosito/flutter-action@v2
         with:
           cache: true
-      - name: GH-Page Build
+          channel: stable
+      - name: Android Build
         working-directory: ./macless_haystack
         run: |
           flutter pub get
+          flutter build apk --release --build-name=${{ env.VERSION }}   
+          mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/android-application.apk
+      - name: Upload Android Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-application
+          path: ./macless_haystack/build/app/outputs/flutter-apk/android-application.apk
+      - name: GH-Page Build
+        working-directory: ./macless_haystack
+        run: |
+          flutter pub get --offline 
           flutter build web --profile --base-href "/macless-haystack/"
+      - name: Cache Flutter Pub
+        uses: actions/cache@v4
+        id: flutter-pub-cache
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('macless_haystack/pubspec.lock') }}
+          restore-keys: ${{ runner.os }}-pub-
       - name: Deploy to Github Pages
-        if: github.ref == 'refs/heads/dev'  
+        if: github.ref == 'refs/heads/dev'
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           folder: ./macless_haystack/build/web
@@ -91,7 +105,7 @@ jobs:
       - name: Web Build
         working-directory: ./macless_haystack
         run: |
-          flutter pub get
+          flutter pub get 
           flutter test
           flutter build web --release
       - name: Copy files to web application
@@ -101,29 +115,20 @@ jobs:
           cd ./macless_haystack/build/webapplication
           zip -r webapplication.zip .
       - name: Upload Web Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: webapplication
           path: ./macless_haystack/build/webapplication
-      - name: Android Build
-        working-directory: ./macless_haystack
-        run: |
-          flutter build apk --release --build-name=${{ env.VERSION }}   
-          mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/android-application.apk
-      - name: Upload Android Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-application
-          path: ./macless_haystack/build/app/outputs/flutter-apk/android-application.apk
-      - uses: actions/cache@v3
+
+      - uses: actions/cache@v5
         with:
           path: |
             ~/.cache/pip
             ~/.platformio/.cache
           key: ${{ runner.os }}-pio
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v6
         with:
-          python-version: '3.13'
+          python-version: '3.14'
       - name: Install PlatformIO Core
         run: pip install --upgrade platformio
       - name: Build NRF5x firmware
@@ -140,6 +145,7 @@ jobs:
             firmware/nrf5x/compiled/*.bin
       - name: Build ESP32 firmware
         run: |
+          pio pkg list --project-dir firmware/ESP32/
           pio run -d firmware/ESP32/
           cd firmware/ESP32/.pio/build/esp32dev/
           zip -r esp32-firmware.zip firmware.bin partitions.bin bootloader.bin

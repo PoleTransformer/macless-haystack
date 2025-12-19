@@ -18,7 +18,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.1.0
 
 environment:
-  sdk: ">=3.0.0 <4.0.0"
+  sdk: ">=3.4.0 <4.0.0"
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -32,34 +32,32 @@ dependencies:
 
   # UI
   flutter_colorpicker: ^1.1.0
-  flutter_slidable: ^4.0.0
+  flutter_slidable: ^4.0.3
   marquee: ^2.3.0
 
   # Networking
-  http: ^1.4.0
-  universal_html: ^2.2.4
+  http: ^1.6.0
+  universal_html: ^2.3.0
 
   # Cryptography
   # latest version of pointy castle for crypto functions
   pointycastle: ^4.0.0
 
   # State Management
-  provider: ^6.1.5
+  provider: ^6.1.5+1
 
   # Location
-  universal_io: ^2.2.2
-  flutter_map: ^8.2.1
-  flutter_map_cancellable_tile_provider: ^3.1.1
+  flutter_map: ^8.2.2
   location: ^8.0.1
   geocoding: ^4.0.0
 
   # Storage
-  shared_preferences: ^2.5.3
-  flutter_secure_storage: ^9.2.4
-  file_picker: ^10.2.0
+  shared_preferences: ^2.5.4
+  flutter_secure_storage: ^10.0.0
+  file_picker: ^10.3.7
 
   # Sharing
-  share_plus: ^11.0.0
+  share_plus: ^12.0.1
   url_launcher: ^6.3.2
   path_provider: ^2.1.5
   maps_launcher: ^3.0.0+1
@@ -68,20 +66,20 @@ dependencies:
   flutter_settings_screens: ^0.3.4
   latlong2: ^0.9.1
   intl: ^0.20.2
-  logger: ^2.6.1
+  logger: ^2.6.2
 
 
 dev_dependencies:
 
-  dependency_validator: ^5.0.2
+  dependency_validator: ^5.0.3
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^5.0.0 # Do not update
-  test: ^1.26.3
-  mockito: ^5.5.0
+  flutter_lints: ^6.0.0 # Do not update
+  test: ^1.28.0
+  mockito: ^5.6.1
 
 # Configuration for flutter_launcher_icons
 flutter_icons:
