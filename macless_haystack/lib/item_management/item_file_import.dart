@@ -144,6 +144,9 @@ class _ItemFileImportState extends State<ItemFileImport> {
     Accessory newAccessory = Accessory(
         datePublished: DateTime(1970),
         hashedPublicKey: keyPair.hashedPublicKey,
+        symmetricKey: accessoryDTO.symmetricKey,
+        symmetricTimestamp: accessoryDTO.symmetricTimestamp,
+        rotateInterval: accessoryDTO.rotateInterval,
         id: accessoryDTO.id.toString(),
         name: accessoryDTO.name,
         color: color,

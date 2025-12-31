@@ -129,6 +129,9 @@ class ItemExportMenu extends StatelessWidget {
           privateKey: privateKey,
           icon: accessory.rawIcon,
           isActive: accessory.isActive,
+          symmetricKey: accessory.symmetricKey,
+          symmetricTimestamp: accessory.symmetricTimestamp,
+          rotateInterval: accessory.rotateInterval,
           additionalKeys: additionalPrivateKeys));
     }
     JsonEncoder encoder = const JsonEncoder.withIndent('  '); // format output

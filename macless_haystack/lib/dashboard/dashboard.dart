@@ -93,12 +93,13 @@ class _DashboardState extends State<Dashboard> {
     try {
       var count = await accessoryRegistry
           .loadLocationReports(accessories.where((a) => a.isActive));
+      final symmetricKeyCount = await accessoryRegistry.getSymmetricKeys(accessories.where((a) => a.isActive));
       if (mounted && accessories.isNotEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             backgroundColor: Theme.of(context).colorScheme.primary,
             content: Text(
-              'Fetched $count location(s).${inactive > 0 ? '$inactive inactive accessories skipped' : ''}',
+              'Fetched $count location(s). Using $symmetricKeyCount generated symmetric keys. ${inactive > 0 ? '$inactive inactive accessories skipped' : ''}',
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onPrimary,
               ),

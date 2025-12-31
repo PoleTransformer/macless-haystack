@@ -1,5 +1,7 @@
 import 'dart:collection';
 import 'dart:convert';
+import 'dart:typed_data';
+import 'package:pointycastle/export.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:logger/logger.dart';
@@ -9,6 +11,7 @@ import 'package:macless_haystack/findMy/find_my_controller.dart';
 import 'package:macless_haystack/findMy/models.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:macless_haystack/preferences/user_preferences_model.dart';
+import './secure_storage_ext.dart';
 
 const accessoryStorageKey = 'ACCESSORIES';
 const historyStorageKey = 'HISTORY';
@@ -80,11 +83,77 @@ class AccessoryRegistry extends ChangeNotifier {
     }
   }
 
+  Future<Uint8List> _kdf_sha256(Uint8List Z, Uint8List secret, int keyLength) async {
+    final shaDigest = SHA256Digest();
+
+    var counter = 1;
+    var output = Uint8List(0);
+
+    while(output.length < keyLength) {
+      shaDigest.reset();
+      shaDigest.update(Z, 0, Z.length);
+      var counterData = ByteData(4)..setUint32(0, counter);
+      var counterDataBytes = counterData.buffer.asUint8List();
+      shaDigest.update(counterDataBytes, 0, counterDataBytes.lengthInBytes);
+
+      shaDigest.update(secret, 0, secret.lengthInBytes);
+
+      Uint8List out = Uint8List(shaDigest.digestSize);
+      shaDigest.doFinal(out, 0);
+
+      output = Uint8List.fromList([...output,...out]);
+      counter++;
+    }
+    return output.sublist(0,keyLength);
+  }
+
+  Future<FindMyKeyPair> generateNextKey(Uint8List initPublic, Uint8List symmetric, String accessoryId) async {
+    BigInt bytesToBigInt(Uint8List bytes) => BigInt.parse(bytes.map((b) => b.toRadixString(16).padLeft(2,'0')).join(), radix: 16);
+
+    Uint8List SK1 = await _kdf_sha256(symmetric,utf8.encode("update"),32);
+
+    Uint8List antiTrack = await _kdf_sha256(SK1,utf8.encode("diversify"),72);
+    Uint8List ui = antiTrack.sublist(0,36);
+    Uint8List vi = antiTrack.sublist(36,72);
+
+    final ECDomainParameters curveDomainParam = ECDomainParameters('secp224r1');
+
+    BigInt bigUi = bytesToBigInt(ui);
+    BigInt bigVi = bytesToBigInt(vi);
+    BigInt bigInitPublic = bytesToBigInt(initPublic);
+    BigInt bigPrivKey = ((bigInitPublic * bigUi) + bigVi) % curveDomainParam.n;
+    // final Uint8List privKeyBytes = Uint8List.fromList( //convert BigInt to Uint8List
+    //   [for (var v = bigPrivKey; v > BigInt.zero; v = v >> 8) (v & BigInt.from(0xff)).toInt()]
+    //       .reversed
+    //       .toList(),
+    // );
+
+    // Uint8List pubKey = (curveDomainParam.G * bigPrivKey)!.getEncoded(false).sublist(1,29); //extract X coordinate only
+
+    ECPublicKey puKey = ECPublicKey(curveDomainParam.G * bigPrivKey,curveDomainParam);
+    ECPrivateKey prKey = ECPrivateKey(bigPrivKey,curveDomainParam);
+
+    final hashedKey = FindMyController.getHashedPublicKey(publicKey:puKey);
+    final keyPair = FindMyKeyPair(puKey, hashedKey, prKey, DateTime.now(), -1);
+    await _storage.write(key: hashedKey, value: keyPair.getBase64PrivateKey());
+    await _storage.writeList(key: accessoryId, value: hashedKey);
+    return keyPair;
+  }
+
+  Future<int> getSymmetricKeys(Iterable<Accessory> currentAccessories) async {
+    int count = 0;
+    for (var i = 0; i < currentAccessories.length; i++) {
+      var accessory = currentAccessories.elementAt(i);
+      final a = await _storage.readList(key: accessory.id);
+      count += a.length;
+    }
+    return count;
+  }
+
   /// Fetches new location reports and matches them to their accessory.
   Future<int> loadLocationReports(
       Iterable<Accessory> currentAccessories) async {
     List<Future<List<FindMyLocationReport>>> runningLocationRequests = [];
-
     // request location updates for all accessories simultaneously
     String? url = Settings.getValue<String>(endpointUrl);
     for (var i = 0; i < currentAccessories.length; i++) {
@@ -100,7 +169,50 @@ class AccessoryRegistry extends ChangeNotifier {
               .toList();
 
       hashedPublicKeys.add(keyPair);
+      if(accessory.symmetricKey.isNotEmpty) { //use symmetric key rotation
+        //accessory.symmetricKeyPair ??= <FindMyKeyPair>[];
+        Uint8List symmetric = base64Decode(accessory.symmetricKey);
+        Uint8List pub;
+        int parsedTimestamp;
 
+        String rawStorage = await _storage.read(key: accessory.id) ?? "";
+        final lastKey = rawStorage.split(":");
+        if(rawStorage.isEmpty) {
+          String hashedPubKey = await accessory.getAdvertisementKey();
+          pub = base64Decode(hashedPubKey);
+          parsedTimestamp = int.tryParse(accessory.symmetricTimestamp)!;
+        }
+        else {
+          pub = base64Decode(lastKey[1]);
+          parsedTimestamp = int.tryParse(lastKey[0])!;
+        }
+
+        int currentTimestamp = DateTime.now().millisecondsSinceEpoch;
+        int rotateInterval = int.tryParse(accessory.rotateInterval)!;
+        int maxSize = (1440/rotateInterval).floor()*7;
+        int iterations = ((currentTimestamp-parsedTimestamp)/(rotateInterval*60000)).truncate();
+
+        if(iterations>0) {
+          //accessory.symmetricTimestamp=currentTimestamp.toString(); //update to current timestamp
+          //accessory.symmetricKeyPair.clear();
+          for(int i = 0; i < iterations && i < maxSize; i++) {
+            logger.d(i);
+            FindMyKeyPair nextKey = await generateNextKey(pub, symmetric,accessory.id);
+            //accessory.symmetricKeyPair.add(nextKey);
+            pub = base64Decode(nextKey.getBase64AdvertisementKey());
+          }
+          final b64Pub = base64Encode(pub);
+          await _storage.write(key: accessory.id, value: '$currentTimestamp:$b64Pub'); //store the last base64 encoded public key in secure storage
+          // int totalSize = accessory.symmetricKeyPair.length;
+          // if(totalSize > maxSize) { //1440/15 ad interval * 7 days = 672 max keys
+          //   accessory.symmetricKeyPair = accessory.symmetricKeyPair.sublist(totalSize-maxSize); //remove oldest element at beginning
+          // }
+        }
+        final b64StorageKeys = await _storage.readList(key: accessory.id);
+        logger.d(b64StorageKeys);
+        final storageKeys = await Future.wait(b64StorageKeys.map(FindMyController.getKeyPair));
+        hashedPublicKeys = [...hashedPublicKeys,...storageKeys];
+      }
       var locationRequest =
           FindMyController.computeResults(hashedPublicKeys, url);
       runningLocationRequests.add(locationRequest);

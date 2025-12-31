@@ -4,7 +4,9 @@ class AccessoryDTO {
   List<double> colorComponents;
   String name;
   double? lastDerivationTimestamp;
-  String? symmetricKey;
+  String symmetricKey;
+  String symmetricTimestamp;
+  String rotateInterval;
   int? updateInterval;
   String privateKey;
   String icon;
@@ -24,7 +26,9 @@ class AccessoryDTO {
       required this.colorComponents,
       required this.name,
       this.lastDerivationTimestamp,
-      this.symmetricKey,
+      required this.symmetricKey,
+      required this.symmetricTimestamp,
+      required this.rotateInterval,
       this.updateInterval,
       required this.privateKey,
       required this.icon,
@@ -55,6 +59,8 @@ class AccessoryDTO {
         name = json['name'],
         lastDerivationTimestamp = json['lastDerivationTimestamp'] ?? 0,
         symmetricKey = json['symmetricKey'] ?? '',
+        symmetricTimestamp = json['symmetricTimestamp'] ?? '',
+        rotateInterval = json['rotateInterval'] ?? '',
         updateInterval = json['updateInterval'] ?? 0,
         privateKey = json['privateKey'],
         icon = json['icon'],
@@ -78,6 +84,9 @@ class AccessoryDTO {
           'privateKey': privateKey,
           'icon': icon,
           'isActive': isActive,
-          'additionalKeys': additionalKeys
+          'additionalKeys': additionalKeys,
+          'symmetricKey': symmetricKey,
+          'symmetricTimestamp': symmetricTimestamp,
+          'rotateInterval': rotateInterval,
         };
 }

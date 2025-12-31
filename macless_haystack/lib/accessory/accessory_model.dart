@@ -54,6 +54,15 @@ class Accessory {
   String name;
   List<String> additionalKeys;
 
+  /// Base64 encoded symmetric key for key rotation
+  String symmetricKey;
+
+  /// Unix timestamp of when symmetric key was generated
+  String symmetricTimestamp;
+
+  /// Time in minutes to rotate advertisement keys
+  String rotateInterval;
+
   /// The display icon of the accessory.
   String _icon;
 
@@ -91,6 +100,9 @@ class Accessory {
       {required this.id,
       required this.name,
       required this.hashedPublicKey,
+      required this.symmetricKey,
+      required this.symmetricTimestamp,
+      required this.rotateInterval,
       required this.datePublished,
       this.isActive = true,
       LatLng? lastLocation,
@@ -119,6 +131,9 @@ class Accessory {
         id: id,
         name: name,
         hashedPublicKey: hashedPublicKey,
+        symmetricKey: symmetricKey,
+        symmetricTimestamp: symmetricTimestamp,
+        rotateInterval: rotateInterval,
         color: color,
         icon: _icon,
         isActive: isActive,
@@ -134,6 +149,9 @@ class Accessory {
     id = newAccessory.id;
     name = newAccessory.name;
     hashedPublicKey = newAccessory.hashedPublicKey;
+    symmetricKey = newAccessory.symmetricKey;
+    symmetricTimestamp = newAccessory.symmetricTimestamp;
+    rotateInterval = newAccessory.rotateInterval;
     color = newAccessory.color;
     _icon = newAccessory._icon;
     isActive = newAccessory.isActive;
@@ -184,6 +202,9 @@ class Accessory {
       : id = json['id'],
         name = json['name'],
         hashedPublicKey = json['hashedPublicKey'],
+        symmetricKey = json['symmetricKey'] ?? '',
+        symmetricTimestamp = json['symmetricTimestamp'] ?? '',
+        rotateInterval = json['rotateInterval'] ?? '',
         datePublished = json['datePublished'] != null
             ? DateTime.fromMillisecondsSinceEpoch(json['datePublished'])
             : null,
@@ -218,6 +239,9 @@ class Accessory {
         'id': id,
         'name': name,
         'hashedPublicKey': hashedPublicKey,
+        'symmetricKey': symmetricKey,
+        'symmetricTimestamp': symmetricTimestamp,
+        'rotateInterval': rotateInterval,
         'datePublished': datePublished?.millisecondsSinceEpoch,
         'latitude': _lastLocation?.latitude,
         'longitude': _lastLocation?.longitude,
