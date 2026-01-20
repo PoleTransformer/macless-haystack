@@ -99,7 +99,7 @@ class _DashboardState extends State<Dashboard> {
           SnackBar(
             backgroundColor: Theme.of(context).colorScheme.primary,
             content: Text(
-              'Fetched $count location(s). Using $symmetricKeyCount generated symmetric keys. ${inactive > 0 ? '$inactive inactive accessories skipped' : ''}',
+              'Fetched $count location(s). $symmetricKeyCount ${inactive > 0 ? '$inactive inactive accessories skipped' : ''}',
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onPrimary,
               ),

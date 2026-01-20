@@ -58,12 +58,29 @@ class FindMyController {
     List<FindMyKeyPair> keyPairs = map['keyPair'];
     var url = map['url'];
     int daysToFetch = map['daysToFetch'];
+    int split = keyPairs.length~/2;
+    List jsonResults = [];
+
     Map<String, FindMyKeyPair> hashedKeyKeyPairsMap = {
       for (var e in keyPairs) e.getHashedAdvertisementKey(): e
     };
+    
+    if(split > 0) {
+      for(int i = 0; i < 2; i++) {
+        Map<String, FindMyKeyPair> hashedKeyKeyPairsMap = {
+          for (int j = i*split; j < ((i+1)*split > keyPairs.length ? keyPairs.length : (i+1)*split); j++) keyPairs[j].getHashedAdvertisementKey(): keyPairs[j]
+        };
 
-    List jsonResults = await ReportsFetcher.fetchLocationReports(
+        List results = await ReportsFetcher.fetchLocationReports(
+            hashedKeyKeyPairsMap.keys, daysToFetch, url, map['user'], map['pass']);
+        jsonResults.addAll(results);
+      }
+    }
+    else {
+      jsonResults = await ReportsFetcher.fetchLocationReports(
         hashedKeyKeyPairsMap.keys, daysToFetch, url, map['user'], map['pass']);
+    }
+
     FindMyLocationReport? latest;
     DateTime latestDate = DateTime.fromMicrosecondsSinceEpoch(0);
     for (var result in jsonResults) {

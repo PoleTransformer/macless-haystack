@@ -229,7 +229,7 @@ def decrypt_cbc(usr, data):
     return padder.update(data) + padder.finalize()
 
 
-WAITING_TIME = 60
+WAITING_TIME = 1
 
 
 def sms_second_factor(dsid, idms_token):
