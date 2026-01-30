@@ -30,12 +30,52 @@ class _PreferencesPageState extends State<PreferencesPage> {
             getUserTile(),
             getPassTile(),
             getNumberofDaysTile(),
+            getNumberofRequestsTile(),
+            getTimeOffsetTile(),
             ListTile(
               title: getAbout(),
             ),
           ],
         ),
       ),
+    );
+  }
+  
+  getNumberofRequestsTile() {
+    return const DropDownSettingsTile<int>(
+      title: 'Number of requests',
+      settingKey: numberOfRequests,
+      values: <int, String>{
+        1: "1",
+        2: "2",
+        3: "3",
+        4: "4",
+        5: "5",
+        6: "6",
+        7: "7",
+      },
+      selected: 1,
+    );
+  }
+
+  getTimeOffsetTile() {
+    return const DropDownSettingsTile<int>(
+      title: 'Minute Offsets',
+      settingKey: timeOffset,
+      values: <int, String>{
+        -5: "-5",
+        -4: "-4",
+        -3: "-3",
+        -2: "-2",
+        -1: "-1",
+        0: "0",
+        1: "1",
+        2: "2",
+        3: "3",
+        4: "4",
+        5: "5",
+      },
+      selected: 0,
     );
   }
 

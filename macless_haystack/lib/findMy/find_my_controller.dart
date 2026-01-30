@@ -44,6 +44,8 @@ class FindMyController {
     map['url'] = url;
     map['daysToFetch'] =
         Settings.getValue<int>(numberOfDaysToFetch, defaultValue: 7)!;
+    map['numberOfRequests'] = 
+        Settings.getValue<int>(numberOfRequests, defaultValue: 1)!;
     map['user'] = Settings.getValue<String>(endpointUser, defaultValue: '')!;
     map['pass'] = Settings.getValue<String>(endpointPass, defaultValue: '')!;
     return compute(_getListedReportResults, map);
@@ -58,22 +60,23 @@ class FindMyController {
     List<FindMyKeyPair> keyPairs = map['keyPair'];
     var url = map['url'];
     int daysToFetch = map['daysToFetch'];
-    int split = keyPairs.length~/2;
+    int numberOfRequests = map['numberOfRequests'];
+    int split = keyPairs.length~/numberOfRequests;
     List jsonResults = [];
 
     Map<String, FindMyKeyPair> hashedKeyKeyPairsMap = {
       for (var e in keyPairs) e.getHashedAdvertisementKey(): e
     };
     
-    if(split > 0) {
-      for(int i = 0; i < 2; i++) {
+    if(numberOfRequests > 1 && split > 0) {
+      for(int i = 0; i < numberOfRequests; i++) {
         Map<String, FindMyKeyPair> hashedKeyKeyPairsMap = {
           for (int j = i*split; j < ((i+1)*split > keyPairs.length ? keyPairs.length : (i+1)*split); j++) keyPairs[j].getHashedAdvertisementKey(): keyPairs[j]
         };
 
         List results = await ReportsFetcher.fetchLocationReports(
             hashedKeyKeyPairsMap.keys, daysToFetch, url, map['user'], map['pass']);
-        jsonResults.addAll(results);
+        jsonResults = [...jsonResults,...results];
       }
     }
     else {

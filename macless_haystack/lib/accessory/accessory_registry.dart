@@ -177,7 +177,6 @@ class AccessoryRegistry extends ChangeNotifier {
 
       hashedPublicKeys.add(keyPair);
       if(accessory.symmetricKey.isNotEmpty) { //use symmetric key rotation
-        //accessory.symmetricKeyPair ??= <FindMyKeyPair>[];
         Uint8List symmetric = base64Decode(accessory.symmetricKey);
         String b64Pub;
         int parsedTimestamp;
@@ -193,6 +192,13 @@ class AccessoryRegistry extends ChangeNotifier {
         else { //use from secure storage
           b64Pub = lastKey[1];
           parsedTimestamp = int.tryParse(lastKey[0])!;
+        }
+
+        int timeOffsetMinutes = Settings.getValue<int>(timeOffset)!;
+        if(timeOffsetMinutes!=0) {
+          parsedTimestamp+=(timeOffsetMinutes*60000); //convert timeOffsetMinutes to ms
+          await _storage.write(key: accessory.id, value: '$parsedTimestamp:$b64Pub');
+          logger.d(parsedTimestamp);
         }
 
         int rotateInterval = (int.tryParse(accessory.rotateInterval) ?? 15) * 60000;

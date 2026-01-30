@@ -9,6 +9,8 @@ const endpointUrl = 'HAYSTACK_URL';
 const String endpointUser = 'HAYSTACK_USER';
 const String endpointPass = 'HAYSTACK_PASS';
 const String numberOfDaysToFetch = 'NUMBER_OF_DAYS';
+const String numberOfRequests = 'NUMBER_OF_REQUESTS';
+const String timeOffset = 'TIME_OFFSET';
 
 class UserPreferences extends ChangeNotifier {
   /// If these settings are initialized.
